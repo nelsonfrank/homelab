@@ -4,6 +4,9 @@ networks:
   media-network:
     driver: bridge
 
+volumes:
+  stremio-data:
+
 services:
   ###########################################################################
   # Dashy
@@ -20,6 +23,29 @@ services:
       - UID=568
       - GID=568
     restart: unless-stopped
+
+  ###########################################################################
+  # Streamio
+  ###########################################################################
+  stremio-server:
+    stremio-server:
+    image: stremio/server:latest
+    container_name: stremio-server
+    restart: unless-stopped
+    networks:
+      - media-network
+
+    ports:
+      - "11470:11470" # HTTP
+      - "12470:12470" # HTTPS (recommended)
+
+    environment:
+      - NO_CORS=1
+      # - AUTO_SERVER_URL=1
+      # - IPADDRESS=your.public.ip.or.domain   # Helps with auto certs
+
+    volumes:
+      - stremio-data:/root/.stremio-server
 
   ###########################################################################
   # qBittorrent
