@@ -1,0 +1,237 @@
+version: "3.8"
+
+networks:
+  media-network:
+    driver: bridge
+
+services:
+  ###########################################################################
+  # Dashy
+  ###########################################################################
+  dashy:
+    container_name: Dashy
+    image: lissy93/dashy
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/dashy:/app/user-data/
+    ports:
+      - 4000:8080
+    environment:
+      - NODE_ENV=production
+      - UID=568
+      - GID=568
+    restart: unless-stopped
+
+  ###########################################################################
+  # qBittorrent
+  ###########################################################################
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    ports:
+      - "${WEBUI_PORT_QBITTORRENT:-8080}:8080"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/qbittorrent:/config
+      - ${FOLDER_FOR_MEDIA}:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
+
+  ###########################################################################
+  # SABnzbd
+  ###########################################################################
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    restart: unless-stopped
+    ports:
+      - "${WEBUI_PORT_SABNZBD:-8081}:8080"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/sabnzbd:/config
+      - ${FOLDER_FOR_MEDIA}:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
+
+  ###########################################################################
+  # Radarr
+  ###########################################################################
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    ports:
+      - "${WEBUI_PORT_RADARR:-7878}:7878"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/radarr:/config
+      - ${FOLDER_FOR_MEDIA}:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
+
+  ###########################################################################
+  # Sonarr
+  ###########################################################################
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    ports:
+      - "${WEBUI_PORT_SONARR:-8989}:8989"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/sonarr:/config
+      - ${FOLDER_FOR_MEDIA}:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
+
+  ###########################################################################
+  # Prowlarr
+  ###########################################################################
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    ports:
+      - "${WEBUI_PORT_PROWLARR:-9696}:9696"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/prowlarr:/config
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
+
+  ###########################################################################
+  # Bazarr
+  ###########################################################################
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    ports:
+      - "${WEBUI_PORT_BAZARR:-6767}:6767"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/bazarr:/config
+      - ${FOLDER_FOR_MEDIA}:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
+
+  ###########################################################################
+  # Jellyseerr
+  ###########################################################################
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: unless-stopped
+    ports:
+      - "${WEBUI_PORT_JELLYSEERR:-5055}:5055"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/jellyseerr:/app/config
+    environment:
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  ###########################################################################
+  # Emby
+  ###########################################################################
+  emby:
+    image: emby/embyserver:latest
+    container_name: embyserver
+    restart: on-failure
+
+    environment:
+      - UID=1000
+      - GID=100
+      - GIDLIST=100
+      - TZ=${TIMEZONE}
+
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/emby:/config
+      - ${FOLDER_FOR_MEDIA}/tv:/mnt/share1
+      - ${FOLDER_FOR_MEDIA}/movies:/mnt/share2
+
+    ports:
+      - "8096:8096" # HTTP
+      - "8920:8920" # HTTPS
+
+  ###########################################################################
+  # Unpackerr
+  ###########################################################################
+  unpackerr:
+    image: golift/unpackerr:latest
+    container_name: unpackerr
+    restart: unless-stopped
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/unpackerr:/config
+      - ${FOLDER_FOR_MEDIA}:/data
+    environment:
+      - TZ=${TIMEZONE}
+      - UN_SONARR_0_URL=http://192.168.1.164:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_RADARR_0_URL=http://192.168.1.164:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+    networks:
+      - media-network
+
+  ###########################################################################
+  # Profilarr
+  ###########################################################################
+  profilarr:
+    image: santiagosayshey/profilarr:latest
+    container_name: profilarr
+    ports:
+      - 6868:6868
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/profilarr:/config
+    environment:
+      - TZ=America/New_York
+    restart: unless-stopped
+  ###########################################################################
+  # QUI
+  ###########################################################################
+  qui:
+    image: ghcr.io/autobrr/qui:latest
+    container_name: qui
+    restart: unless-stopped
+    ports:
+      - "7476:7476"
+    volumes:
+      - ${FOLDER_FOR_CONFIGS}/qui:/config
+  ###########################################################################
+  # FlareSolverr (Cloudflare / anti-bot bypass)
+  ###########################################################################
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    ports:
+      - "8191:8191"
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=${TIMEZONE}
+    networks:
+      - media-network
