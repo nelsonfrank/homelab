@@ -1,0 +1,8 @@
+# Patch the shared media volume storage class for your specific environment
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-media-data
+  namespace: media
+spec:
+  storageClassName: nfs-client # Change to your cluster's RWX storage class (e.g., nfs-client, ceph-fs, truenas-nfs)

@@ -11,6 +11,7 @@ The project is organized into infrastructure configurations for both Portainer a
 - `k8s/stacks/`: Kubernetes manifests for running the services in a cluster.
   - `media-stack/`:
     - [level-1-beginner/](k8s/stacks/media-stack/level-1-beginner/): Complete working manifests for Level 1 implementation (Deployments, Services, PVCs, ConfigMaps).
+    - [level-2-intermediate/](k8s/stacks/media-stack/level-2-intermediate/): Production homelab setup with Ingress routing, Kustomize base & overlays, dynamic RWX storage, health probes, and securityContext.
 - `doc/`: Architecture and migration guides.
   - [Docker Compose to Kubernetes Migration Guide](doc/docker-compose-to-kubernetes.md): Detailed 3-level guide (Beginner, Intermediate, Advanced) on transitioning homelab stacks to Kubernetes.
 

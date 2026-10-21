@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emby
+  namespace: media
+  labels:
+    app.kubernetes.io/name: emby
+    app.kubernetes.io/part-of: media-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: emby
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: emby
+        app.kubernetes.io/part-of: media-stack
+    spec:
+      containers:
+        - name: emby
+          image: emby/embyserver:latest
+          env:
+            - name: UID
+              value: "1000"
+            - name: GID
+              value: "100"
+            - name: GIDLIST
+              value: "100"
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: media-common-env
+                  key: TZ
+          ports:
+            - name: http
+              containerPort: 8096
+            - name: https
+              containerPort: 8920
+          readinessProbe:
+            httpGet:
+              path: /System/Ping
+              port: 8096
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /System/Ping
+              port: 8096
+            initialDelaySeconds: 40
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /mnt/share1
+              subPath: tv
+            - name: media
+              mountPath: /mnt/share2
+              subPath: movies
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: emby-config
+        - name: media
+          persistentVolumeClaim:
+            claimName: pvc-media-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emby
+  namespace: media
+  labels:
+    app.kubernetes.io/name: emby
+    app.kubernetes.io/part-of: media-stack
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: emby
+  ports:
+    - name: http
+      port: 8096
+      targetPort: 8096
+    - name: https
+      port: 8920
+      targetPort: 8920

@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: media
+
+resources:
+  - namespace.yaml
+  - storage.yaml
+  - ingress.yaml
+  - apps/dashy.yaml
+  - apps/stremio.yaml
+  - apps/qbittorrent.yaml
+  - apps/sabnzbd.yaml
+  - apps/radarr.yaml
+  - apps/sonarr.yaml
+  - apps/prowlarr.yaml
+  - apps/bazarr.yaml
+  - apps/jellyseerr.yaml
+  - apps/emby.yaml
+  - apps/unpackerr.yaml
+  - apps/profilarr.yaml
+  - apps/qui.yaml
+  - apps/flaresolverr.yaml
+
+configMapGenerator:
+  - name: media-common-env
+    literals:
+      - TZ=America/New_York
+      - TIMEZONE=America/New_York
+      - PUID=1000
+      - PGID=1000
+
+secretGenerator:
+  - name: media-secrets
+    literals:
+      - SONARR_API_KEY=replace_with_your_sonarr_api_key
+      - RADARR_API_KEY=replace_with_your_radarr_api_key
