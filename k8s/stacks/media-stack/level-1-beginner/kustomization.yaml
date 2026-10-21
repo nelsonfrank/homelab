@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: media
+
+resources:
+  - 00-namespace.yaml
+  - 01-configmap-and-secrets.yaml
+  - 02-storage.yaml
+  - dashy.yaml
+  - stremio.yaml
+  - qbittorrent.yaml
+  - sabnzbd.yaml
+  - radarr.yaml
+  - sonarr.yaml
+  - prowlarr.yaml
+  - bazarr.yaml
+  - jellyseerr.yaml
+  - emby.yaml
+  - unpackerr.yaml
+  - profilarr.yaml
+  - qui.yaml
+  - flaresolverr.yaml

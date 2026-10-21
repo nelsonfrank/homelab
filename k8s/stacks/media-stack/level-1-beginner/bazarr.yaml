@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bazarr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: bazarr
+    app.kubernetes.io/part-of: media-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bazarr
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bazarr
+        app.kubernetes.io/part-of: media-stack
+    spec:
+      containers:
+        - name: bazarr
+          image: lscr.io/linuxserver/bazarr:latest
+          envFrom:
+            - configMapRef:
+                name: media-common-env
+          ports:
+            - name: http
+              containerPort: 6767
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: bazarr-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-media-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bazarr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: bazarr
+    app.kubernetes.io/part-of: media-stack
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: bazarr
+  ports:
+    - name: http
+      port: 6767
+      targetPort: 6767
+      nodePort: 30676

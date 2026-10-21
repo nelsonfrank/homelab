@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emby
+  namespace: media
+  labels:
+    app.kubernetes.io/name: emby
+    app.kubernetes.io/part-of: media-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: emby
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: emby
+        app.kubernetes.io/part-of: media-stack
+    spec:
+      containers:
+        - name: emby
+          image: emby/embyserver:latest
+          env:
+            - name: UID
+              value: "1000"
+            - name: GID
+              value: "100"
+            - name: GIDLIST
+              value: "100"
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: media-common-env
+                  key: TZ
+          ports:
+            - name: http
+              containerPort: 8096
+            - name: https
+              containerPort: 8920
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /mnt/share1
+              subPath: tv
+            - name: media
+              mountPath: /mnt/share2
+              subPath: movies
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: emby-config
+        - name: media
+          persistentVolumeClaim:
+            claimName: pvc-media-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emby
+  namespace: media
+  labels:
+    app.kubernetes.io/name: emby
+    app.kubernetes.io/part-of: media-stack
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: emby
+  ports:
+    - name: http
+      port: 8096
+      targetPort: 8096
+      nodePort: 30896
+    - name: https
+      port: 8920
+      targetPort: 8920
+      nodePort: 30920

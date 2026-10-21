@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+  labels:
+    app: qbittorrent
+    type: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: media-stack
+      type: deployment
+  template:
+    metadata:
+      labels:
+        app: media-stack
+        type: deployment
+    spec:
+      containers:
+        - name: qbittorrent
+          image: linuxserver/qbittorrent
+          ports:
+            - containerPort: 8080
+        - name: jackett
+          image: linuxserver/jackett
+          ports:
+            - containerPort: 9117
+        - 

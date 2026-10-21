@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qui
+  namespace: media
+  labels:
+    app.kubernetes.io/name: qui
+    app.kubernetes.io/part-of: media-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qui
+        app.kubernetes.io/part-of: media-stack
+    spec:
+      containers:
+        - name: qui
+          image: ghcr.io/autobrr/qui:latest
+          ports:
+            - name: http
+              containerPort: 7476
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: qui-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qui
+  namespace: media
+  labels:
+    app.kubernetes.io/name: qui
+    app.kubernetes.io/part-of: media-stack
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: qui
+  ports:
+    - name: http
+      port: 7476
+      targetPort: 7476
+      nodePort: 30747

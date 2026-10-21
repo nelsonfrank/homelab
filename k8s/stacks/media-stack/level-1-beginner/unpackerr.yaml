@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpackerr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: unpackerr
+    app.kubernetes.io/part-of: media-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unpackerr
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unpackerr
+        app.kubernetes.io/part-of: media-stack
+    spec:
+      containers:
+        - name: unpackerr
+          image: golift/unpackerr:latest
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: media-common-env
+                  key: TZ
+            # Internal Kubernetes DNS names replace hardcoded host IP addresses
+            - name: UN_SONARR_0_URL
+              value: "http://sonarr:8989"
+            - name: UN_SONARR_0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: media-secrets
+                  key: SONARR_API_KEY
+            - name: UN_RADARR_0_URL
+              value: "http://radarr:7878"
+            - name: UN_RADARR_0_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: media-secrets
+                  key: RADARR_API_KEY
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: unpackerr-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-media-data

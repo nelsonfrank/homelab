@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sabnzbd
+  namespace: media
+  labels:
+    app.kubernetes.io/name: sabnzbd
+    app.kubernetes.io/part-of: media-stack
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sabnzbd
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sabnzbd
+        app.kubernetes.io/part-of: media-stack
+    spec:
+      containers:
+        - name: sabnzbd
+          image: lscr.io/linuxserver/sabnzbd:latest
+          envFrom:
+            - configMapRef:
+                name: media-common-env
+          ports:
+            - name: webui
+              containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sabnzbd-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-media-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sabnzbd
+  namespace: media
+  labels:
+    app.kubernetes.io/name: sabnzbd
+    app.kubernetes.io/part-of: media-stack
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: sabnzbd
+  ports:
+    - name: webui
+      port: 8080
+      targetPort: 8080
+      nodePort: 30881
